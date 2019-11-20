@@ -5,13 +5,13 @@ import {
   OneToMany,
   BaseEntity
 } from "typeorm";
-import { Field, Int, ObjectType } from "type-graphql";
+import { Field, ID, ObjectType } from "type-graphql";
 import { Post } from "./Post";
 
 @ObjectType()
 @Entity()
 export class User extends BaseEntity {
-  @Field(() => Int)
+  @Field(() => ID)
   @PrimaryGeneratedColumn()
   id: number;
 

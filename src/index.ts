@@ -21,9 +21,10 @@ TypeORM.useContainer(Container);
   await TypeORM.createConnection({ ...options, name: "default" });
 
     // seed database with some data
-    const { defaultUser } = await seedDatabase();
+   const { defaultUser } = await seedDatabase();
 
-  const context: Context = { user: defaultUser };
+
+  const context: Context = { user:  defaultUser};
 
   const apolloServer = new ApolloServer({
     schema: await buildSchema({

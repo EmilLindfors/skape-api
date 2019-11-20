@@ -74,7 +74,7 @@ import { InjectRepository } from "typeorm-typedi-extensions";
   
     @Mutation(() => Boolean)
     async deletePost(@Arg("id", () => Int) id: number) {
-      await Post.delete({ id });
+      await this.postRepository.delete({ id });
       return true;
     }
 
