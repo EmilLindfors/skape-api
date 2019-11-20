@@ -5,9 +5,16 @@ import {
     Int,
     Query,
     InputType,
-    Field
+    Field,
+    FieldResolver,
+    Root,
+    Ctx
   } from "type-graphql";
+  import { Repository } from "typeorm";
+import { InjectRepository } from "typeorm-typedi-extensions";
   import { Post } from "../entity/Post";
+  import { User } from "../entity/User";
+  import { Context } from "../helpers";
   
   @InputType()
   class PostInput {
@@ -27,12 +34,33 @@ import {
     content?: string;
   }
   
-  @Resolver()
+  @Resolver(() => Post)
   export class PostResolver {
+    constructor(
+      @InjectRepository(Post) private readonly postRepository: Repository<Post>,
+      @InjectRepository(User) private readonly userRepository: Repository<User>,
+    ) {}
+
+    @Query(() => Post, { nullable: true })
+    post(@Arg("postId", () => Int) postId: number) {
+      return this.postRepository.findOne(postId);
+    }
+  
+    @Query(() => [Post])
+    posts(): Promise<Post[]> {
+      return this.postRepository.find();
+    }
+
     @Mutation(() => Post)
-    async createPost(@Arg("options", () => PostInput) options: PostInput) {
-      const post = await Post.create(options).save();
-      return post;
+    async createPost(
+      @Arg("options") options: PostInput,
+      @Ctx() { user }: Context,
+    ): Promise<Post> {
+      const recipe = this.postRepository.create({
+        ...options,
+        authorId: user.id,
+      });
+      return await this.postRepository.save(recipe);
     }
   
     @Mutation(() => Boolean)
@@ -49,9 +77,10 @@ import {
       await Post.delete({ id });
       return true;
     }
-  
-    @Query(() => [Post])
-    Posts() {
-      return Post.find();
+
+    @FieldResolver()
+    async author(@Root() post: Post): Promise<User> {
+      return (await this.userRepository.findOne(post.authorId, { cache: 1000 }))!;
     }
+  
   }

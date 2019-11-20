@@ -7,7 +7,10 @@ import {
     InputType,
     Field
   } from "type-graphql";
+  import { Repository } from "typeorm";
+  import { InjectRepository } from "typeorm-typedi-extensions";
   import { User } from "../entity/User";
+  //import { Post } from "../entity/Post";
   
   @InputType()
   class UserInput {
@@ -27,13 +30,21 @@ import {
     lastName?: string;
   }
   
-  @Resolver()
+  @Resolver(() => User)
   export class UserResolver {
+    constructor(
+      //@InjectRepository(Post) private readonly postRepository: Repository<Post>,
+      @InjectRepository(User) private readonly userRepository: Repository<User>,
+    ) {}
+
     @Mutation(() => User)
-    async createUser(@Arg("options", () => UserInput) options: UserInput) {
-      const user = await User.create(options).save();
-      return user;
+    async createUser(@Arg("options", () => UserInput) options: UserInput) : Promise<User> {
+      const recipe = this.userRepository.create({
+        ...options
+      });
+      return await this.userRepository.save(recipe);
     }
+
   
     @Mutation(() => Boolean)
     async updateUser(
@@ -49,9 +60,10 @@ import {
       await User.delete({ id });
       return true;
     }
-  
+
     @Query(() => [User])
-    Users() {
-      return User.find();
+    users(): Promise<User[]> {
+      return this.userRepository.find();
     }
+  
   }

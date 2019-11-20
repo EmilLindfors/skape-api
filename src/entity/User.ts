@@ -23,9 +23,8 @@ export class User extends BaseEntity {
   @Column()
   lastName: string;
 
-  @OneToMany(
-    () => Post,
-    post => post.author
-  )
+  @Field(() => User)
+  @OneToMany(  () => Post,
+  post => post.author)
   posts: Post[];
 }

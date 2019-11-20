@@ -1,13 +1,27 @@
-import { Entity, PrimaryGeneratedColumn, Column, BaseEntity, OneToOne, JoinColumn } from "typeorm";
-import { Field, Int, ObjectType } from "type-graphql";
-import { User} from "./User"
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  BaseEntity,
+  ManyToOne,
+  OneToMany,
+  CreateDateColumn
+} from "typeorm";
+import { Field, ObjectType, ID } from "type-graphql";
+import { User } from "./User";
+import { Tag } from "./Tag";
+import { RelationColumn } from "../helpers";
 
 @ObjectType()
 @Entity()
 export class Post extends BaseEntity {
-  @Field(() => Int)
+  @Field(() => ID)
   @PrimaryGeneratedColumn()
   id: number;
+
+  @Field({ nullable: true })
+  @CreateDateColumn({ nullable: true })
+  date: Date;
 
   @Field()
   @Column()
@@ -17,7 +31,17 @@ export class Post extends BaseEntity {
   @Column()
   content: string;
 
-  @OneToOne(() => User)
-  @JoinColumn()
+  @Field(() => [Tag])
+  @OneToMany(
+    () => Tag,
+    tag => tag.post,
+    { cascade: ["insert"] }
+  )
+  tags: Tag[];
+
+  @Field(() => User)
+  @ManyToOne(() => User)
   author: User;
+  @RelationColumn()
+  authorId: number;
 }
