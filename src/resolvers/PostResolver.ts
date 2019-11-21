@@ -23,6 +23,9 @@ import { InjectRepository } from "typeorm-typedi-extensions";
   
     @Field()
     content: string;
+
+    @Field(() => Int, { nullable: true })
+    userId?: number;
   }
   
   @InputType()
@@ -50,15 +53,16 @@ import { InjectRepository } from "typeorm-typedi-extensions";
     posts(): Promise<Post[]> {
       return this.postRepository.find();
     }
-
+  /** This mutation will create a post and assign an author to said post that is either specified in the mutation or brought from context or defaults to user 1*/
     @Mutation(() => Post)
     async createPost(
       @Arg("options") options: PostInput,
       @Ctx() { user }: Context,
     ): Promise<Post> {
       const recipe = this.postRepository.create({
-        ...options,
-        authorId: user.id,
+        title: options.title,
+        content: options.content,
+        authorId: options.userId ? options.userId : user.id ? user.id : 1,
       });
       return await this.postRepository.save(recipe);
     }

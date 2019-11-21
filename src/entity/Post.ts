@@ -31,7 +31,7 @@ export class Post extends BaseEntity {
   @Column()
   content: string;
 
-  @Field(() => [Tag])
+  @Field(() => [Tag], { nullable: true })
   @OneToMany(
     () => Tag,
     tag => tag.post,

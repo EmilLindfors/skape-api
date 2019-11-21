@@ -16,15 +16,22 @@ export class User extends BaseEntity {
   id: number;
 
   @Field()
+  @Column("text", { unique: true })
+  email: string;
+
   @Column()
+  password: string;
+
+  @Field({ nullable: true })
+  @Column({ nullable: true })
   firstName: string;
 
-  @Field()
-  @Column()
+  @Field({ nullable: true })
+  @Column({ nullable: true })
   lastName: string;
 
-  @Field(() => User)
+  @Field(() => User, { nullable: true })
   @OneToMany(  () => Post,
-  post => post.author)
+  post => post.author, { nullable: true })
   posts: Post[];
 }
