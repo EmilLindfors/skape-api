@@ -7,6 +7,7 @@ import {
   InputType,
   Field,
   UseMiddleware,
+  ObjectType,
   Ctx
 } from "type-graphql";
 import bcrypt from "bcryptjs";
@@ -14,8 +15,11 @@ import { Service } from "typedi";
 import { Repository, EntityRepository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
 import { User } from "../entity/User";
-import { MyContext, UserResponse } from "../graphql-types";
+import {Context, MyContext} from "../graphql-types/context";
 import { isAuth } from "../middleware/isAuth";
+import { verify } from "jsonwebtoken";
+import { createRefreshToken, createAccessToken } from "../middleware/auth";
+import { sendRefreshToken } from "../middleware/sendRefreshToken";
 
 //import { Post } from "../entity/Post";
 
@@ -61,6 +65,14 @@ class UserUpdateInput {
   lastName?: string;
 }
 
+@ObjectType()
+class LoginResponse {
+  @Field()
+  accessToken: string;
+  @Field(() => User)
+  user: User;
+}
+
 @Resolver(() => User)
 export class UserResolver {
   constructor(
@@ -68,66 +80,78 @@ export class UserResolver {
     @InjectRepository(User) private readonly userRepository: UserRepository
   ) {}
 
-  @Mutation(() => UserResponse)
+  @Mutation(() => User)
   async register(
     @Arg("options", () => UserInput) options: UserInput
-  ): Promise<UserResponse> {
+  ): Promise<User | undefined>  {
     const hashedPassword = await bcrypt.hash(options.password, 12);
 
     const existingUser = await this.userRepository.findByEmail(options.email);
 
     if (existingUser) {
-      return {
-        errors: [
-          {
-            path: "email",
-            message: "already in use"
-          }
-        ]
-      };
+      return undefined;
     }
 
-    const user = await this.userRepository
+    return await this.userRepository
       .create({
         email: options.email,
-        password: hashedPassword
+        password: hashedPassword,
+        firstName: options.firstName,
+        lastName: options.lastName
       })
       .save();
-
-    return { user };
   }
 
   @Mutation(() => User)
   async login(
     @Arg("options", () => UserInput) options: UserInput,
-    @Ctx() ctx: MyContext
-  ): Promise<User | undefined> {
+    @Ctx() { res }: MyContext
+  ): Promise<LoginResponse | undefined> {
+
+
     const user = await this.userRepository.findByEmail(options.email);
+
     if (!user) {
-      return undefined;
+      throw new Error("could not find user");
     }
 
     const valid = await bcrypt.compare(options.password, user.password);
+
     if (!valid) {
-      return undefined;
+      throw new Error("bad password");
     }
-    ctx.req.session!.save(() => {user.id});
-    ctx.req.session!.userId = user.id;
-    return user;
+
+    // login successful
+
+    sendRefreshToken(res, createRefreshToken(user));
+
+    return {
+      accessToken: createAccessToken(user),
+      user
+    };
   }
 
   @Query(() => User, { nullable: true })
   async me(@Ctx() ctx: MyContext): Promise<User | undefined> {
-    console.log(ctx.req.session!);
-    if (!ctx.req.session!.userId) {
+    const authorization = ctx.req.headers["authorization"];
+
+    if (!authorization) {
       return undefined;
     }
 
-    return this.userRepository.findOne(ctx.req.session!.userId);
+    try {
+      const token = authorization.split(" ")[1];
+      const payload: any = verify(token, process.env.ACCESS_TOKEN_SECRET!);
+      return this.userRepository.findOne(payload.userId);
+    } catch (err) {
+      console.log(err);
+      return undefined;
+    }
+
   }
 
   @Mutation(() => Boolean)
-  async logout(@Ctx() ctx: MyContext): Promise<Boolean> {
+  async logout(@Ctx() ctx: Context): Promise<Boolean> {
     return new Promise((res, rej) =>
       ctx.req.session!.destroy(err => {
         if (err) {

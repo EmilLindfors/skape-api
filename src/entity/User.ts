@@ -14,6 +14,12 @@ export class User extends BaseEntity {
   @Field(() => ID)
   @PrimaryGeneratedColumn()
   id: number;
+  
+  @Column("boolean", { default: false })
+  confirmed: boolean;
+  
+  @Column("int", { default: 0 })
+  tokenVersion: number;
 
   @Field()
   @Column("text", { unique: true })
@@ -34,4 +40,5 @@ export class User extends BaseEntity {
   @OneToMany(  () => Post,
   post => post.author, { nullable: true })
   posts: Post[];
+
 }

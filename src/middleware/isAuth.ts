@@ -1,10 +1,11 @@
+  
 import { MiddlewareFn } from "type-graphql";
-import { ApolloError } from "apollo-server-core";
-import { MyContext } from "../graphql-types/my-context";
 
-export const isAuth: MiddlewareFn<MyContext> = async ({ context }, next) => {
+import { Context } from "../graphql-types/context";
+
+export const isAuth: MiddlewareFn<Context> = async ({ context }, next) => {
   if (!context.req.session!.userId) {
-    throw new ApolloError("not authenticated");
+    throw new Error("not authenticated");
   }
 
   return next();
