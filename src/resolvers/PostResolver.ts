@@ -8,13 +8,15 @@ import {
     Field,
     FieldResolver,
     Root,
-    Ctx
+    //UseMiddleware,
+    //Ctx
   } from "type-graphql";
   import { Repository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
   import { Post } from "../entity/Post";
   import { User } from "../entity/User";
-  import { Context } from "../helpers";
+  //import { MyContext } from "../graphql-types/context";
+  //import {isAuth} from "../middleware/isAuthenticated"
   
   @InputType()
   class PostInput {
@@ -55,14 +57,16 @@ import { InjectRepository } from "typeorm-typedi-extensions";
     }
   /** This mutation will create a post and assign an author to said post that is either specified in the mutation or brought from context or defaults to user 1*/
     @Mutation(() => Post)
+    //@UseMiddleware(isAuth)
     async createPost(
       @Arg("options") options: PostInput,
-      @Ctx() { user }: Context,
+      //@Ctx() { payload }: MyContext,
     ): Promise<Post> {
+      //console.log(payload)
       const recipe = this.postRepository.create({
         title: options.title,
         content: options.content,
-        authorId: options.userId ? options.userId : user.id ? user.id : 1,
+        authorId: options.userId ? options.userId : 1,
       });
       return await this.postRepository.save(recipe);
     }

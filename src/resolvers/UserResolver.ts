@@ -15,7 +15,7 @@ import { Service } from "typedi";
 import { Repository, EntityRepository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
 import { User } from "../entity/User";
-import {Context, MyContext} from "../graphql-types/context";
+import {MyContext} from "../graphql-types/context";
 import { isAuth } from "../middleware/isAuth";
 import { verify } from "jsonwebtoken";
 import { createRefreshToken, createAccessToken } from "../middleware/auth";
@@ -92,17 +92,18 @@ export class UserResolver {
       return undefined;
     }
 
-    return await this.userRepository
+    const user = this.userRepository
       .create({
         email: options.email,
         password: hashedPassword,
         firstName: options.firstName,
         lastName: options.lastName
       })
-      .save();
+      return await this.userRepository.save(user);
+
   }
 
-  @Mutation(() => User)
+  @Mutation(() => LoginResponse)
   async login(
     @Arg("options", () => UserInput) options: UserInput,
     @Ctx() { res }: MyContext
@@ -151,18 +152,10 @@ export class UserResolver {
   }
 
   @Mutation(() => Boolean)
-  async logout(@Ctx() ctx: Context): Promise<Boolean> {
-    return new Promise((res, rej) =>
-      ctx.req.session!.destroy(err => {
-        if (err) {
-          console.log(err);
-          return rej(false);
-        }
+  async logout(@Ctx() { res }: MyContext) {
+    sendRefreshToken(res, "");
 
-        ctx.res.clearCookie("qid");
-        return res(true);
-      })
-    );
+    return true;
   }
 
   @Mutation(() => User)
