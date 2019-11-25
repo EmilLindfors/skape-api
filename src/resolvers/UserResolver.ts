@@ -63,6 +63,12 @@ class UserUpdateInput {
 
   @Field(() => String, { nullable: true })
   lastName?: string;
+
+  @Field(() => String, { nullable: true })
+  avatarUrl?: string;
+
+  @Field(() => String, { nullable: true })
+  calendarUrl?: string;
 }
 
 @ObjectType()
