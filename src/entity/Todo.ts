@@ -9,13 +9,14 @@ import {
   import { User } from "./User";
   import { RelationColumn } from "../helpers";
 
+  "Description for the type"
   @ObjectType()
   @Entity()
   export class Todo extends BaseEntity {
     @Field(() => ID)
     @PrimaryGeneratedColumn()
     id: number;
-    
+
     @Column("boolean", { default: false })
     completed: boolean;
 
@@ -30,7 +31,7 @@ import {
 
     @Field(() => User)
     @ManyToOne(() => User)
-    author: User;
+    todoAuthor: User;
     @RelationColumn()
     authorId: number;
   

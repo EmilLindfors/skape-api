@@ -7,8 +7,7 @@ import express from "express";
 import connectSqlite3 from "connect-sqlite3";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
-import { PostResolver } from "./resolvers/PostResolver";
-import { UserResolver } from "./resolvers/UserResolver";
+import { PostResolver, UserResolver, TodoResolver } from "./resolvers";
 import cookieParser from "cookie-parser";
 import { verify } from "jsonwebtoken";
 import cors from "cors";
@@ -87,7 +86,7 @@ TypeORM.useContainer(Container);
 
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
-      resolvers: [UserResolver, PostResolver],
+      resolvers: [UserResolver, PostResolver, TodoResolver],
       container: Container,
       authChecker: ({ context: { req } }) => {
         return !!req.session.userId;

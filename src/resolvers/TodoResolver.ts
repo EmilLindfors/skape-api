@@ -34,7 +34,7 @@ class TodoInput {
 }
 
 @Resolver(() => Todo)
-export class PostResolver {
+export class TodoResolver {
   constructor(
     @InjectRepository(Todo) private readonly todoRepository: Repository<Todo>,
     @InjectRepository(User) private readonly userRepository: Repository<User>
