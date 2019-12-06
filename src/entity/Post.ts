@@ -31,6 +31,10 @@ export class Post extends BaseEntity {
   @Column()
   content: string;
 
+  @Field({ nullable: true })
+  @Column({ nullable: true })
+  coverImg: string;
+
   @Field(() => [Tag], { nullable: true })
   @OneToMany(
     () => Tag,

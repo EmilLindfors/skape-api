@@ -22,6 +22,9 @@ import { InjectRepository } from "typeorm-typedi-extensions";
   class PostInput {
     @Field()
     title: string;
+
+    @Field(() => String, { nullable: true })
+    coverImg?: string;
   
     @Field()
     content: string;
@@ -37,6 +40,9 @@ import { InjectRepository } from "typeorm-typedi-extensions";
   
     @Field(() => String, { nullable: true })
     content?: string;
+
+    @Field(() => String, { nullable: true })
+    coverImg?: string;
   }
   
   @Resolver(() => Post)
@@ -66,6 +72,7 @@ import { InjectRepository } from "typeorm-typedi-extensions";
       const recipe = this.postRepository.create({
         title: options.title,
         content: options.content,
+        coverImg: options.coverImg,
         authorId: options.userId ? options.userId : 1,
       });
       return await this.postRepository.save(recipe);
